@@ -1,27 +1,13 @@
-// src/database/database.module.ts
+// src/app.module.ts
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { DatabaseModule } from './database/database.module'; // Import DatabaseModule
 
 @Module({
-  imports: [
-    ConfigModule.forRoot(),
-    TypeOrmModule.forRootAsync({  // Use forRootAsync for config
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        type: 'mysql',
-        host: configService.get<string>('MYSQL_HOST'),
-        port: configService.get<number>('MYSQL_PORT'),
-        username: configService.get<string>('MYSQL_USER'),
-        password: configService.get<string>('MYSQL_PASSWORD'),
-        database: configService.get<string>('MYSQL_DATABASE'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: false, // Use migrations in production!
-        autoLoadEntities: true,
-      }),
-    }),
-  ],
-  exports: [TypeOrmModule], // Export TypeOrmModule
+  imports: [ConfigModule.forRoot(), DatabaseModule], // Import DatabaseModule
+  controllers: [AppController],
+  providers: [AppService], // AppService is already here
 })
-export class DatabaseModule {}
+export class AppModule {}
