@@ -1,13 +1,12 @@
 // src/app.module.ts
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { DatabaseModule } from './database/database.module'; // Import DatabaseModule
+import { DatabaseModule } from './database/database.module'; // Correct import
 
 @Module({
-  imports: [ConfigModule.forRoot(), DatabaseModule], // Import DatabaseModule
+  imports: [DatabaseModule], // Import the DatabaseModule here
   controllers: [AppController],
-  providers: [AppService], // AppService is already here
+  providers: [AppService],
 })
 export class AppModule {}
