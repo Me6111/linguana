@@ -14,4 +14,12 @@ export class Nouns {
 
     @Column()
     es: string;
+
+
+
+    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+    updatedAt: Date;
+  
+    @Column({ type: 'int', default: 1 })
+    version: number;
 }
