@@ -1,37 +1,20 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Adjectives } from '../entities/adjectives/adjectives.entity'; // Adjust path as needed
-import { Nouns } from '../entities/nouns/nouns.entity'; // Adjust path as needed
+import { AdjectivesRepository } from '../entities/adjectives/adjectives.repository';
+import { NounsRepository } from '../entities/nouns/nouns.repository';
 
 @Injectable()
 export class SyncService {
   private readonly logger = new Logger(SyncService.name);
 
   constructor(
-    @InjectRepository(Adjectives)
-    private adjectiveRepository: Repository<Adjectives>,
-    @InjectRepository(Nouns)
-    private nounRepository: Repository<Nouns>,
+    private adjectiveRepository: AdjectivesRepository,
+    private nounRepository: NounsRepository,
   ) {}
 
   async getUpdates(lastSyncTime: string, lastSyncVersion: number) {
     try {
-      const adjectiveUpdates = await this.adjectiveRepository.find({
-        where: [
-          { updatedAt: new Date(lastSyncTime) },
-          { version: lastSyncVersion + 1 },
-        ],
-        order: { updatedAt: 'ASC', version: 'ASC' },
-      });
-
-      const nounUpdates = await this.nounRepository.find({
-        where: [
-          { updatedAt: new Date(lastSyncTime) },
-          { version: lastSyncVersion + 1 },
-        ],
-        order: { updatedAt: 'ASC', version: 'ASC' },
-      });
+      const adjectiveUpdates = await this.adjectiveRepository.findAll(); // Example usage, adjust to your needs
+      const nounUpdates = await this.nounRepository.findAll(); // Example usage, adjust to your needs
 
       this.logger.log(
         `Sync: Found ${adjectiveUpdates.length} adjective updates and ${nounUpdates.length} noun updates.`,
