@@ -17,8 +17,8 @@ import {
   import { Adjectives } from './adjectives.entity';
   
   @Controller('adjectives')
-  export class AdjectiveController {
-    private readonly logger = new Logger(AdjectiveController.name); // Create Logger Instance
+  export class AdjectivesController {
+    private readonly logger = new Logger(AdjectivesController.name); // Create Logger Instance
   
     constructor(private readonly adjectivesService: AdjectivesService) {}
   
