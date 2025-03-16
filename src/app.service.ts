@@ -36,9 +36,16 @@ export class AppService {
     const queryRunner = AppDataSource.createQueryRunner();
     await queryRunner.connect();
     try {
-      const results: any[] = await queryRunner.query(`SELECT * FROM \`${tableName}\``); // Use backticks for table name
+      const results: any[] = await queryRunner.query(`SELECT * FROM \`${tableName}\``);
+      if (results.length === 0) {
+        // If no rows, fetch column names
+        const columns: { Field: string }[] = await queryRunner.query(`SHOW COLUMNS FROM \`${tableName}\``);
+        const columnNames = columns.map((col) => col.Field);
+        await queryRunner.release();
+        return columnNames; // Return column names as an array of strings
+      }
       await queryRunner.release();
-      return results;
+      return results; // Return the table data if there are rows
     } catch (error) {
       console.error(`Error fetching content for table ${tableName}:`, error);
       await queryRunner.release();
