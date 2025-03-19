@@ -17,7 +17,7 @@ export class AppController {
   }
 
   @Get('tables/:tableName') // Dynamic route for table content
-  async getTableContent(@Param('tableName') tableName: string): Promise<any[]> {
+  async getTableContent(@Param('tableName') tableName: string): Promise<{ data: any[]; columns: any[] }> {
     return this.appService.getTableContent(tableName);
   }
 }
