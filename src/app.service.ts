@@ -32,20 +32,24 @@ export class AppService {
     }
   }
 
-  async getTableContent(tableName: string): Promise<any[]> {
+  async getTableContent(tableName: string): Promise<{ data: any[]; columns: any[] }> {
     const queryRunner = AppDataSource.createQueryRunner();
     await queryRunner.connect();
     try {
       const results: any[] = await queryRunner.query(`SELECT * FROM \`${tableName}\``);
-      if (results.length === 0) {
-        // If no rows, fetch column names
-        const columns: { Field: string }[] = await queryRunner.query(`SHOW COLUMNS FROM \`${tableName}\``);
-        const columnNames = columns.map((col) => col.Field);
-        await queryRunner.release();
-        return columnNames; // Return column names as an array of strings
-      }
+
+      // Fetch column information including data types
+      const columns: any[] = await queryRunner.query(
+        `SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? AND TABLE_SCHEMA = ?`,
+        [tableName, queryRunner.connection.driver.database],
+      );
+
       await queryRunner.release();
-      return results; // Return the table data if there are rows
+
+      return {
+        data: results,
+        columns: columns,
+      };
     } catch (error) {
       console.error(`Error fetching content for table ${tableName}:`, error);
       await queryRunner.release();
