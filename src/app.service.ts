@@ -38,9 +38,9 @@ export class AppService {
     try {
       const results: any[] = await queryRunner.query(`SELECT * FROM \`${tableName}\``);
 
-      // Fetch column information including data types
+      // Fetch column information including data types, preserving the order
       const columns: any[] = await queryRunner.query(
-        `SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? AND TABLE_SCHEMA = ?`,
+        `SELECT COLUMN_NAME, DATA_TYPE, ORDINAL_POSITION FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? AND TABLE_SCHEMA = ? ORDER BY ORDINAL_POSITION`,
         [tableName, queryRunner.connection.driver.database],
       );
 
