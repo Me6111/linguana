@@ -1,30 +1,30 @@
 import { Controller, Get, Param, Post, Body } from '@nestjs/common';
 import { AppService } from './app.service';
 
-@Controller()
+@Controller('tables') // Corrected: Base route is 'tables'
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
-  }
-
-  @Get('tables')
   async getTables(): Promise<string[]> {
     return this.appService.getTableNames();
   }
 
-  @Get('tables/:tableName')
+  @Get(':tableName') // Corrected: Use :tableName directly after /tables
   async getTableContent(@Param('tableName') tableName: string): Promise<{ data: any[]; columns: any[] }> {
     return this.appService.getTableContent(tableName);
   }
 
-  @Post('tables/:tableName')
+  @Post(':tableName') // Corrected: Use :tableName directly after /tables
   async addTableRow(
     @Param('tableName') tableName: string,
-    @Body() rowData: any, // Assuming JSON body
+    @Body() rowData: any,
   ): Promise<void> {
     return this.appService.addTableRow(tableName, rowData);
+  }
+
+  @Get('hello')
+  getHello(): string {
+    return this.appService.getHello();
   }
 }
