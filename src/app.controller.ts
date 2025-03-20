@@ -1,5 +1,4 @@
-// src/app.controller.ts
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Post, Body } from '@nestjs/common';
 import { AppService } from './app.service';
 
 @Controller()
@@ -16,8 +15,16 @@ export class AppController {
     return this.appService.getTableNames();
   }
 
-  @Get('tables/:tableName') // Dynamic route for table content
+  @Get('tables/:tableName')
   async getTableContent(@Param('tableName') tableName: string): Promise<{ data: any[]; columns: any[] }> {
     return this.appService.getTableContent(tableName);
+  }
+
+  @Post('tables/:tableName')
+  async addTableRow(
+    @Param('tableName') tableName: string,
+    @Body() rowData: any, // Assuming JSON body
+  ): Promise<void> {
+    return this.appService.addTableRow(tableName, rowData);
   }
 }
