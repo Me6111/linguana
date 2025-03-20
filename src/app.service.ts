@@ -83,7 +83,9 @@ export class AppService {
         throw new Error('One or more columns do not exist in the table.');
       }
 
-      const sql = `INSERT INTO \`${tableName}\` (${columns.join(', ')}) VALUES (${placeholders})`;
+      const quotedColumns = columns.map((column) => `\`${column}\``).join(', '); // Quote column names
+
+      const sql = `INSERT INTO \`${tableName}\` (${quotedColumns}) VALUES (${placeholders})`;
 
       await queryRunner.query(sql, values);
       await queryRunner.release();
