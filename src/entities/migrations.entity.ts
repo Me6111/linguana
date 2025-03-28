@@ -1,10 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryColumn, Column } from 'typeorm';
 
-@Entity('migrations') // Corrected table name
-export class Migrations { // Corrected entity name
-  @PrimaryGeneratedColumn()
+@Entity('migrations')
+export class Migrations {
+  @PrimaryColumn()
   id: number;
 
-  @Column('text')
-  sql: string;
+  @Column({ type: 'bigint' })
+  timestamp: number;
+
+  @Column({ type: 'varchar', length: 255 }) // Adjust length as needed
+  name: string;
 }
