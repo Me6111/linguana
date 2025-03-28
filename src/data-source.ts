@@ -1,5 +1,5 @@
 // src/data-source.ts
-import { DataSource } from 'typeorm';
+import { DataSource, DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -9,13 +9,16 @@ if (!process.env.MYSQL_URL) {
   process.exit(1);
 }
 
-export const AppDataSource = new DataSource({
+export const dataSourceOptions: DataSourceOptions = {
   type: 'mysql',
   url: process.env.MYSQL_URL,
   entities: [__dirname + '/**/*.entity{.ts,.js}'],
   migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
-  synchronize: true, // Change synchronize to true (for development) or run migrations
-});
+  synchronize: false, // Change synchronize to false
+};
+
+const AppDataSource = new DataSource(dataSourceOptions);
+export default AppDataSource;
 
 AppDataSource.initialize()
   .then(() => {

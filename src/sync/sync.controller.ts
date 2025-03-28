@@ -6,10 +6,7 @@ export class SyncController {
   constructor(private readonly syncService: SyncService) {}
 
   @Get()
-  async getUpdates(
-    @Query('lastSyncTime') lastSyncTime: string,
-    @Query('lastSyncVersion') lastSyncVersion: number,
-  ) {
-    return this.syncService.getUpdates(lastSyncTime, lastSyncVersion);
+  async getUpdates(@Query('lastMigrationId') lastMigrationId: number) {
+    return this.syncService.getUpdates(lastMigrationId);
   }
 }
