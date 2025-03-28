@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SyncService } from './sync.service';
 import { SyncController } from './sync.controller';
-import { Migration } from '../migration/migration.entity';
+import { Migrations } from '../entities/migrations.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Migration])],
+  imports: [TypeOrmModule.forFeature([Migrations])],
   providers: [SyncService],
   controllers: [SyncController],
 })

@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-@Entity()
-export class Migration {
+@Entity('migrations') // Corrected table name
+export class Migrations { // Corrected entity name
   @PrimaryGeneratedColumn()
   id: number;
 
