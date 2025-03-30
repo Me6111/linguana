@@ -1,5 +1,6 @@
 // src/app.service.ts
 import { Injectable } from '@nestjs/common';
+import { TableNamesService } from './table-names.service'; // Import the new service
 import AppDataSource from './data-source';
 import * as dotenv from 'dotenv';
 
@@ -7,32 +8,15 @@ dotenv.config();
 
 @Injectable()
 export class AppService {
+  constructor(private readonly tableNamesService: TableNamesService) {} // Inject the new service
+
   async getTableNames(): Promise<string[]> {
-    const queryRunner = AppDataSource.createQueryRunner();
-    await queryRunner.connect();
-    try {
-      const mysqlUrl = process.env.MYSQL_URL;
-      if (!mysqlUrl) {
-        throw new Error('MYSQL_URL environment variable is not set.');
-      }
-
-      const urlParts = new URL(mysqlUrl);
-      const databaseName = urlParts.pathname.substring(1);
-
-      const results: { TABLE_NAME: string }[] = await queryRunner.query(
-        'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ?',
-        [databaseName],
-      );
-      await queryRunner.release();
-      return results.map((row) => row.TABLE_NAME);
-    } catch (error) {
-      console.error('Error fetching table names:', error);
-      await queryRunner.release();
-      throw error;
-    }
+    return this.tableNamesService.getTableNames(); // Use the injected service
   }
 
-  async getTableContent(tableName: string): Promise<{ data: any[]; columns: any[] }> {
+  async getTableContent(
+    tableName: string,
+  ): Promise<{ data: any[]; columns: any[] }> {
     const queryRunner = AppDataSource.createQueryRunner();
     await queryRunner.connect();
     try {
@@ -45,7 +29,9 @@ export class AppService {
 
       const enhancedColumns = columns.map((col) => {
         const isAutoIncrement = col.EXTRA.includes('auto_increment');
-        const isSystemColumn = col.COLUMN_NAME.toLowerCase() === 'updatedat' || col.COLUMN_NAME.toLowerCase() === 'version';
+        const isSystemColumn =
+          col.COLUMN_NAME.toLowerCase() === 'updatedat' ||
+          col.COLUMN_NAME.toLowerCase() === 'version';
         return {
           ...col,
           isModifiable: !isAutoIncrement && !isSystemColumn,
@@ -75,7 +61,9 @@ export class AppService {
 
       // Verify that the columns exist in the table.
       const existingColumns = await queryRunner.query(
-        `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? AND TABLE_SCHEMA = ? AND COLUMN_NAME IN (${columns.map(() => '?').join(', ')})`,
+        `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? AND TABLE_SCHEMA = ? AND COLUMN_NAME IN (${columns
+          .map(() => '?')
+          .join(', ')})`,
         [tableName, queryRunner.connection.driver.database, ...columns],
       );
 

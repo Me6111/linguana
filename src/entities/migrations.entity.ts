@@ -8,6 +8,9 @@ export class Migrations {
   @Column({ type: 'bigint' })
   timestamp: number;
 
-  @Column({ type: 'varchar', length: 255 }) // Adjust length as needed
+  @Column({ type: 'varchar', length: 255 })
   name: string;
+
+  @Column({ type: 'text', nullable: true }) // Added sql column
+  sql: string;
 }
