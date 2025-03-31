@@ -1,9 +1,9 @@
 // src/app.service.ts
 import { Injectable } from '@nestjs/common';
-import { TableNamesService } from './table-names.service';
-import { TableContentService } from './table-content.service';
-import { TableRowService } from './table-row.service';
-import { HelloService } from './hello.service';
+import { TableNamesService } from './services/table-names.service';
+import { TableContentService } from './services/table-content.service';
+import { TableRowService } from './services/table-row.service';
+import { HelloService } from './services/hello.service';
 
 @Injectable()
 export class AppService {

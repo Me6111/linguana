@@ -2,10 +2,10 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { TableNamesService } from './table-names.service';
-import { TableContentService } from './table-content.service';
-import { TableRowService } from './table-row.service';
-import { HelloService } from './hello.service';
+import { TableNamesService } from './services/table-names.service';
+import { TableContentService } from './services/table-content.service';
+import { TableRowService } from './services/table-row.service';
+import { HelloService } from './services/hello.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { dataSourceOptions } from './data-source';
