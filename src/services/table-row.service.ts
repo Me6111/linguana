@@ -28,10 +28,13 @@ export class TableRowService {
 
       const sql = `INSERT INTO \`${tableName}\` (${quotedColumns}) VALUES (${placeholders})`;
 
+      AppDataSource.logger.logQuery(sql, values, queryRunner); // Log the insert query before executing
+
       await queryRunner.query(sql, values);
       await queryRunner.release();
     } catch (error) {
       console.error(`Error adding row to table ${tableName}:`, error);
+      AppDataSource.logger.logQueryError(error.message, `INSERT INTO \`${tableName}\``, Object.values(rowData), queryRunner); //Log error.
       await queryRunner.release();
       throw error;
     }
