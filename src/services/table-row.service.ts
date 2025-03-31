@@ -35,6 +35,13 @@ export class TableRowService {
       AppDataSource.logger.logQuery(sql, values, queryRunner); // Log the insert query before executing
 
       await queryRunner.query(sql, values);
+
+      // Save the corrected query and timestamp to db_changes_history
+      await queryRunner.query(
+        'INSERT INTO db_changes_history (sql, timestamp) VALUES (?, ?)',
+        [correctedQuery, new Date()],
+      );
+
       await queryRunner.release();
     } catch (error) {
       console.error(`Error adding row to table ${tableName}:`, error);
