@@ -14,7 +14,7 @@ export class TableRowService {
 
       // Verify that the columns exist in the table.
       const existingColumns = await queryRunner.query(
-        `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? AND TABLE_SCHEMA = ? AND COLUMN_NAME IN (${columns
+        `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? AND TABLE_ISCHEMA = ? AND COLUMN_NAME IN (${columns
           .map(() => '?')
           .join(', ')})`,
         [tableName, queryRunner.connection.driver.database, ...columns],
@@ -36,9 +36,9 @@ export class TableRowService {
 
       await queryRunner.query(sql, values);
 
-      // Save the corrected query and timestamp to db_changes_history
+      // Save the corrected query and timestamp to db_changes_history using parameters
       await queryRunner.query(
-        'INSERT INTO db_changes_history (sql, timestamp) VALUES (?, ?) ',
+        'INSERT INTO db_changes_history (sql, timestamp) VALUES (?, ?)',
         [correctedQuery, new Date()],
       );
 
