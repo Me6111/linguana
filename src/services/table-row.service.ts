@@ -28,8 +28,8 @@ export class TableRowService {
 
       const sql = `INSERT INTO \`${tableName}\` (${quotedColumns}) VALUES (${placeholders})`;
 
-      // Construct and print the corrected query
-      const correctedQuery = `INSERT INTO \`${tableName}\` (${quotedColumns}) VALUES (${values.map(val => typeof val === 'string' ? `'${val}'` : val).join(', ')})`;
+      // Construct and print the corrected query with escaped single quotes
+      const correctedQuery = `INSERT INTO \`${tableName}\` (${quotedColumns}) VALUES (${values.map(val => typeof val === 'string' ? `'${val.replace(/'/g, "\\'")}'` : val).join(', ')})`;
       console.log(`insert query: ${correctedQuery}`);
 
       AppDataSource.logger.logQuery(sql, values, queryRunner); // Log the insert query before executing
