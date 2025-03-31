@@ -2,15 +2,31 @@
 import { Logger, QueryRunner } from 'typeorm';
 
 export class SqlLogger implements Logger {
-  logQuery(query: string, parameters?: any[], queryRunner?: QueryRunner): any {
+  private maxLogEntries = 1000; // Adjust as needed
+
+  async logQuery(query: string, parameters?: any[], queryRunner?: QueryRunner): Promise<any> {
     if (queryRunner) {
-      queryRunner.query(
-        'INSERT INTO db_changes_history (sql, timestamp) VALUES (?, NOW())',
-        [query],
-      );
+      try {
+        await queryRunner.query(
+          'INSERT INTO db_changes_history (sql, timestamp) VALUES (?, NOW())',
+          [query],
+        );
+
+        // Limit the number of log entries
+        const countResult = await queryRunner.query('SELECT COUNT(*) as count FROM db_changes_history');
+        const count = countResult[0].count;
+
+        if (count > this.maxLogEntries) {
+          await queryRunner.query(
+            'DELETE FROM db_changes_history ORDER BY timestamp ASC LIMIT ?',
+            [count - this.maxLogEntries],
+          );
+        }
+      } catch (error) {
+        console.error('Error logging SQL query:', error);
+      }
     } else {
-        //If query runner is missing, it probably means that the query is executed during the initialization phase.
-        console.log('SQL Query:', query);
+      console.log('SQL Query:', query);
     }
   }
 
