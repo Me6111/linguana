@@ -1,6 +1,6 @@
 // src/table-row.service.ts
 import { Injectable } from '@nestjs/common';
-import AppDataSource from './data-source';
+import AppDataSource from '../data-source';
 
 @Injectable()
 export class TableRowService {

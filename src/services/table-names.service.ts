@@ -1,6 +1,6 @@
 // src/table-names.service.ts
 import { Injectable } from '@nestjs/common';
-import AppDataSource from './data-source';
+import AppDataSource from '../data-source';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
