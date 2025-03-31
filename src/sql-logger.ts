@@ -3,6 +3,7 @@ import { Logger, QueryRunner } from 'typeorm';
 
 export class SqlLogger implements Logger {
   private maxLogEntries = 1000; // Adjust as needed
+  private deleteBatchSize = 100; // Adjust as needed
 
   async logQuery(query: string, parameters?: any[], queryRunner?: QueryRunner): Promise<any> {
     if (queryRunner) {
@@ -17,10 +18,15 @@ export class SqlLogger implements Logger {
         const count = countResult[0].count;
 
         if (count > this.maxLogEntries) {
-          await queryRunner.query(
-            'DELETE FROM db_changes_history ORDER BY timestamp ASC LIMIT ?',
-            [count - this.maxLogEntries],
-          );
+          let rowsToDelete = count - this.maxLogEntries;
+          while (rowsToDelete > 0) {
+            const batch = Math.min(rowsToDelete, this.deleteBatchSize);
+            await queryRunner.query(
+              'DELETE FROM db_changes_history ORDER BY timestamp ASC LIMIT ?',
+              [batch],
+            );
+            rowsToDelete -= batch;
+          }
         }
       } catch (error) {
         console.error('Error logging SQL query:', error);
