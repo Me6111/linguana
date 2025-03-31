@@ -30,7 +30,6 @@ export class SqlLogger implements Logger {
     }
   }
 
-  // Implement other Logger interface methods (empty or console.log)
   logQueryError(error: string, query: string, parameters?: any[], queryRunner?: QueryRunner): any {
     console.error('SQL Query Error:', error, query);
   }
