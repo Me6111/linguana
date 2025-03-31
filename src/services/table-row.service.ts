@@ -38,7 +38,7 @@ export class TableRowService {
 
       // Save the corrected query and timestamp to db_changes_history
       await queryRunner.query(
-        'INSERT INTO db_changes_history (sql, timestamp) VALUES (?, ?)',
+        'INSERT INTO db_changes_history (sql, timestamp) VALUES (?, ?) ',
         [correctedQuery, new Date()],
       );
 
