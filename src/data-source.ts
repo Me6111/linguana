@@ -1,7 +1,6 @@
 // src/data-source.ts
 import { DataSource, DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
-import { SqlLogger } from './sql-logger'; // Import the custom logger
 
 dotenv.config();
 
@@ -16,8 +15,8 @@ export const dataSourceOptions: DataSourceOptions = {
   entities: [__dirname + '/**/*.entity{.ts,.js}'],
   migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
   synchronize: false,
-  logger: new SqlLogger(), // Use the custom logger
-  logging: true, // TypeORM's built-in logging (optional)
+  logger: 'advanced-console',
+  logging: true,
 };
 
 const AppDataSource = new DataSource(dataSourceOptions);
