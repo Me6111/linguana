@@ -32,11 +32,11 @@ export class TableRowService {
 
       await queryRunner.query(sql, values);
 
-      // Save the SQL and timestamp to db_changes_history (serialize and escape)
-      const serializedSql = JSON.stringify(sql).slice(1, -1).replace(/'/g, "''"); // Serialize, remove quotes, and escape.
+      // Save the SQL and timestamp to db_changes_history (using {{quote}})
+      const safeSql = sql.replace(/'/g, '{{quote}}'); // Replace single quotes with {{quote}}
       await queryRunner.query(
         `INSERT INTO db_changes_history (sql, timestamp) VALUES (?, NOW())`,
-        [serializedSql],
+        [safeSql],
       );
 
       await queryRunner.release();
