@@ -33,7 +33,7 @@ export class TableRowService {
       await queryRunner.query(sql, values);
 
       // Save the SQL and timestamp to db_changes_history (serializing sql)
-      const serializedSql = JSON.stringify(sql); // Serialize the SQL string.
+      const serializedSql = JSON.stringify(sql).slice(1, -1); // Remove surrounding double quotes.
       await queryRunner.query(
         `INSERT INTO db_changes_history (sql, timestamp) VALUES (?, NOW())`,
         [serializedSql],
