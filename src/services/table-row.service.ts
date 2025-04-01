@@ -28,14 +28,8 @@ export class TableRowService {
 
       const sql = `INSERT INTO \`${tableName}\` (${quotedColumns}) VALUES (${placeholders})`;
 
-      // Modify rowData to store the SQL query instead of the original values.
-      const sqlRowData: any = {};
-      columns.forEach((column, index) => {
-        sqlRowData[column] = sql; // Store the SQL query in each cell
-      });
-
-      // Execute the query using the modified rowData.
-      await queryRunner.query(`INSERT INTO \`${tableName}\` (${quotedColumns}) VALUES (${placeholders})`, Object.values(sqlRowData));
+      // Execute the query using the original rowData values.
+      await queryRunner.query(`INSERT INTO \`${tableName}\` (${quotedColumns}) VALUES (${placeholders})`, values);
 
       // Insert the SQL query into the db_changes_history table.
       await queryRunner.query(
