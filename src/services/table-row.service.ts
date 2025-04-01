@@ -28,7 +28,14 @@ export class TableRowService {
 
       const sql = `INSERT INTO \`${tableName}\` (${quotedColumns}) VALUES (${placeholders})`;
 
-      await queryRunner.query(sql, values);
+      // Modify rowData to store the SQL query instead of the original values.
+      const sqlRowData: any = {};
+      columns.forEach((column, index) => {
+        sqlRowData[column] = sql; // Store the SQL query in each cell
+      });
+
+      // Execute the query using the modified rowData.
+      await queryRunner.query(`INSERT INTO \`${tableName}\` (${quotedColumns}) VALUES (${placeholders})`, Object.values(sqlRowData));
       await queryRunner.release();
     } catch (error) {
       console.error(`Error adding row to table ${tableName}:`, error);
