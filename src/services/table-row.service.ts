@@ -36,9 +36,10 @@ export class TableRowService {
 
       await queryRunner.query(sql, values);
 
-      // Save the corrected query and timestamp to db_changes_history using parameters
+      // Save the corrected query and timestamp to db_changes_history using parameters.
+      // Important: No outer quotes around correctedQuery.
       await queryRunner.query(
-        'INSERT INTO db_changes_history (sql, timestamp) VALUES (?, ?) ',
+        'INSERT INTO db_changes_history (sql, timestamp) VALUES (?, ?)',
         [correctedQuery, new Date()],
       );
 
