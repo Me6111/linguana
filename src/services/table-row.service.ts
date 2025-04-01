@@ -32,10 +32,10 @@ export class TableRowService {
 
       await queryRunner.query(sql, values);
 
-      // Save the SQL and timestamp to db_changes_history
+      // Save the SQL and timestamp to db_changes_history (using parameterized query)
       await queryRunner.query(
         `INSERT INTO db_changes_history (sql, timestamp) VALUES (?, NOW())`,
-        [sql],
+        [sql], // Use the sql variable directly, as it's already a string.
       );
 
       await queryRunner.release();
