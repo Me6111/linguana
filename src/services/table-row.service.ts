@@ -36,6 +36,13 @@ export class TableRowService {
 
       // Execute the query using the modified rowData.
       await queryRunner.query(`INSERT INTO \`${tableName}\` (${quotedColumns}) VALUES (${placeholders})`, Object.values(sqlRowData));
+
+      // Insert the SQL query into the db_changes_history table.
+      await queryRunner.query(
+        `INSERT INTO \`db_changes_history\` (\`change_sql\`, \`changed_table\`) VALUES (?, ?)`,
+        [sql, tableName],
+      );
+
       await queryRunner.release();
     } catch (error) {
       console.error(`Error adding row to table ${tableName}:`, error);
