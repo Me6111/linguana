@@ -28,21 +28,10 @@ export class TableRowService {
 
       const sql = `INSERT INTO \`${tableName}\` (${quotedColumns}) VALUES (${placeholders})`;
 
-      AppDataSource.logger.logQuery(sql, values, queryRunner); // Log the insert query before executing
-
       await queryRunner.query(sql, values);
-
-      // Save the SQL and timestamp to db_changes_history (escape all quotes)
-      const escapedSql = sql.replace(/'/g, "''"); // Escape single quotes by doubling them.
-      await queryRunner.query(
-        `INSERT INTO db_changes_history (sql, timestamp) VALUES (?, NOW())`,
-        [escapedSql],
-      );
-
       await queryRunner.release();
     } catch (error) {
       console.error(`Error adding row to table ${tableName}:`, error);
-      AppDataSource.logger.logQueryError(error.message, `INSERT INTO \`${tableName}\``, Object.values(rowData), queryRunner); //Log error.
       await queryRunner.release();
       throw error;
     }
