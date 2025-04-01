@@ -39,8 +39,8 @@ export class TableRowService {
 
       // Insert the SQL query into the db_changes_history table.
       await queryRunner.query(
-        `INSERT INTO \`db_changes_history\` (\`change_sql\`, \`changed_table\`) VALUES (?, ?)`,
-        [sql, tableName],
+        `INSERT INTO \`db_changes_history\` (\`sql\`, \`timestamp\`) VALUES (?, NOW())`,
+        [sql],
       );
 
       await queryRunner.release();
