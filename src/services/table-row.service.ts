@@ -28,20 +28,9 @@ export class TableRowService {
 
       const sql = `INSERT INTO \`${tableName}\` (${quotedColumns}) VALUES (${placeholders})`;
 
-      // Construct and print the corrected query with doubled single quotes
-      const correctedQuery = `INSERT INTO \`${tableName}\` (${quotedColumns}) VALUES (${values.map(val => typeof val === 'string' ? `'${val.replace(/'/g, "''")}'` : val).join(', ')})`;
-      console.log(`insert query: ${correctedQuery}`);
-
       AppDataSource.logger.logQuery(sql, values, queryRunner); // Log the insert query before executing
 
       await queryRunner.query(sql, values);
-
-      // Save the corrected query and timestamp to db_changes_history using parameters
-      await queryRunner.query(
-        'INSERT INTO db_changes_history (sql, timestamp) VALUES (?, ?) ',
-        [correctedQuery, new Date()],
-      );
-
       await queryRunner.release();
     } catch (error) {
       console.error(`Error adding row to table ${tableName}:`, error);
