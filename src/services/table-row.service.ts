@@ -31,10 +31,23 @@ export class TableRowService {
       // Execute the query using the original rowData values.
       await queryRunner.query(`INSERT INTO \`${tableName}\` (${quotedColumns}) VALUES (${placeholders})`, values);
 
-      // Insert the SQL query into the db_changes_history table.
+      // Construct SQL with actual values
+      const valueStrings = values.map((value) => {
+        if (typeof value === 'string') {
+          return `'${value.replace(/'/g, "''")}'`; // Escape single quotes within strings
+        } else if (value === null || value === undefined) {
+          return 'NULL';
+        } else {
+          return value; // Numbers, booleans, etc.
+        }
+      }).join(', ');
+
+      const sqlWithValues = `INSERT INTO \`${tableName}\` (${quotedColumns}) VALUES (${valueStrings})`;
+
+      // Insert the SQL query with actual values into the db_changes_history table.
       await queryRunner.query(
         `INSERT INTO \`db_changes_history\` (\`sql\`, \`timestamp\`) VALUES (?, NOW())`,
-        [sql],
+        [sqlWithValues],
       );
 
       await queryRunner.release();
