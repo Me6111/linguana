@@ -28,6 +28,10 @@ export class AppService {
     return this.tableRowService.addTableRow(tableName, rowData);
   }
 
+  async deleteTableRow(tableName: string, whereClause: string): Promise<void> {
+    return this.tableRowService.deleteTableRow(tableName, whereClause);
+  }
+
   getHello(): string {
     return this.helloService.getHello();
   }

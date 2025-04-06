@@ -1,7 +1,7 @@
-import { Controller, Get, Param, Post, Body } from '@nestjs/common';
+import { Controller, Get, Param, Post, Body, Delete, Query } from '@nestjs/common';
 import { AppService } from './app.service';
 
-@Controller('tables') // Corrected: Base route is 'tables'
+@Controller('tables')
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
@@ -10,17 +10,25 @@ export class AppController {
     return this.appService.getTableNames();
   }
 
-  @Get(':tableName') // Corrected: Use :tableName directly after /tables
+  @Get(':tableName')
   async getTableContent(@Param('tableName') tableName: string): Promise<{ data: any[]; columns: any[] }> {
     return this.appService.getTableContent(tableName);
   }
 
-  @Post(':tableName') // Corrected: Use :tableName directly after /tables
+  @Post(':tableName')
   async addTableRow(
     @Param('tableName') tableName: string,
     @Body() rowData: any,
   ): Promise<void> {
     return this.appService.addTableRow(tableName, rowData);
+  }
+
+  @Delete(':tableName')
+  async deleteTableRow(
+    @Param('tableName') tableName: string,
+    @Query('whereClause') whereClause: string,
+  ): Promise<void> {
+    return this.appService.deleteTableRow(tableName, whereClause);
   }
 
   @Get('hello')
