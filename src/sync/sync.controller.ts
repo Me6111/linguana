@@ -1,30 +1,46 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Inject } from '@nestjs/common';
 import { SyncService } from './sync.service';
+import { InjectConnection } from '@nestjs/typeorm';
+import { Connection } from 'typeorm';
 
 @Controller('sync')
 export class SyncController {
-  constructor(private readonly syncService: SyncService) {}
+  private readonly requiredTables = ['adjectives', 'nouns'];
+
+  constructor(
+    private readonly syncService: SyncService,
+    @InjectConnection() private readonly connection: Connection,
+  ) {}
 
   @Post()
   async sync(@Body() syncData: { lastSQLOperationId: string; schema: Record<string, any> }) {
-    // Process the received lastSQLOperationId and schema here
-    // You will likely need to compare the schema with your server's expected schema
-    // and then determine the necessary SQL migrations to send back to the client.
-
-    // For now, let's just log the received data and return an empty array of migrations
     console.log('Received sync request:', syncData);
+    const clientTables = Object.keys(syncData.schema);
+    const missingTables = this.requiredTables.filter(table => !clientTables.includes(table));
+    const migrations: string[] = [];
 
-    // In a real implementation, you would:
-    // 1. Compare the received schema with your server's schema.
-    // 2. Identify any missing tables or columns on the client.
-    // 3. Generate SQL statements to create the missing schema elements.
-    // 4. Query for any data updates based on the lastSQLOperationId (if applicable).
-    // 5. Return an array of SQL statements to be executed on the client.
-    // 6. Return the latest lastSQLOperationId.
+    if (missingTables.length > 0) {
+      for (const tableName of missingTables) {
+        const tableInfo = await this.connection.query(`PRAGMA table_info("${tableName}")`);
+        if (tableInfo.length > 0) {
+          const columns = tableInfo.map(col => `"${col.name}" ${col.type}${col.notnull === 1 ? ' NOT NULL' : ''}${col.pk === 1 ? ' PRIMARY KEY AUTOINCREMENT' : ''}`).join(', ');
+          migrations.push(`CREATE TABLE IF NOT EXISTS "${tableName}" (${columns});`);
+
+          const tableData = await this.connection.query(`SELECT * FROM "${tableName}"`);
+          for (const row of tableData) {
+            const keys = Object.keys(row).map(key => `"${key}"`).join(', ');
+            const values = Object.values(row).map(value => typeof value === 'string' ? `'${value.replace(/'/g, "''")}'` : value).join(', ');
+            migrations.push(`INSERT INTO "${tableName}" (${keys}) VALUES (${values});`);
+          }
+        } else {
+          console.warn(`Required table "${tableName}" not found on the server.`);
+        }
+      }
+    }
 
     return {
-      migrations: [],
-      lastSQLOperationId: 'someNewId', // Replace with your actual logic
+      migrations: migrations,
+      lastSQLOperationId: 'schemaSync_' + Date.now(), // Example ID after schema sync
     };
   }
 }
