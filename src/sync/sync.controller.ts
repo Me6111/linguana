@@ -21,19 +21,41 @@ export class SyncController {
 
     if (missingTables.length > 0) {
       for (const tableName of missingTables) {
-        const tableInfo = await this.connection.query(`PRAGMA table_info("${tableName}")`);
-        if (tableInfo.length > 0) {
-          const columns = tableInfo.map(col => `"${col.name}" ${col.type}${col.notnull === 1 ? ' NOT NULL' : ''}${col.pk === 1 ? ' PRIMARY KEY AUTOINCREMENT' : ''}`).join(', ');
-          migrations.push(`CREATE TABLE IF NOT EXISTS "${tableName}" (${columns});`);
+        try {
+          const columnsInfo = await this.connection.query(`
+            SELECT column_name, data_type, is_nullable, column_key, column_default
+            FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = ?
+          `, [tableName]);
 
-          const tableData = await this.connection.query(`SELECT * FROM "${tableName}"`);
-          for (const row of tableData) {
-            const keys = Object.keys(row).map(key => `"${key}"`).join(', ');
-            const values = Object.values(row).map(value => typeof value === 'string' ? `'${value.replace(/'/g, "''")}'` : value).join(', ');
-            migrations.push(`INSERT INTO "${tableName}" (${keys}) VALUES (${values});`);
+          if (columnsInfo.length > 0) {
+            const columnsDefinition = columnsInfo.map(col => {
+              let columnDef = `\`${col.column_name}\` ${col.data_type.toUpperCase()}`;
+              if (col.is_nullable === 'NO') {
+                columnDef += ' NOT NULL';
+              }
+              if (col.column_key === 'PRI') {
+                columnDef += ' PRIMARY KEY AUTO_INCREMENT';
+              }
+              if (col.column_default !== null) {
+                columnDef += ` DEFAULT '${col.column_default}'`;
+              }
+              return columnDef;
+            }).join(', ');
+
+            migrations.push(`CREATE TABLE IF NOT EXISTS \`${tableName}\` (${columnsDefinition});`);
+
+            const tableData = await this.connection.query(`SELECT * FROM \`${tableName}\``);
+            for (const row of tableData) {
+              const keys = Object.keys(row).map(key => `\`${key}\``).join(', ');
+              const values = Object.values(row).map(value => typeof value === 'string' ? `'${value.replace(/'/g, "''")}'` : value).join(', ');
+              migrations.push(`INSERT INTO \`${tableName}\` (${keys}) VALUES (${values});`);
+            }
+          } else {
+            console.warn(`Required table "${tableName}" not found on the server.`);
           }
-        } else {
-          console.warn(`Required table "${tableName}" not found on the server.`);
+        } catch (error) {
+          console.error(`Error fetching server schema for table "${tableName}":`, error);
         }
       }
     }
