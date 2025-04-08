@@ -4,6 +4,8 @@ import { Connection } from 'typeorm';
 
 @Controller('sync')
 export class SyncController {
+  private readonly requiredTables = ['adjectives', 'nouns'];
+
   constructor(@InjectConnection() private readonly connection: Connection) {}
 
   @Post()
@@ -12,34 +14,27 @@ export class SyncController {
     const serverSchema: Record<string, any[]> = {};
 
     try {
-      const allTables = await this.connection.query(`
-        SELECT table_name
-        FROM information_schema.tables
-        WHERE table_schema = DATABASE()
-      `);
+      for (const tableName of this.requiredTables) {
+        const columnsInfo = await this.connection.query(
+          `SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_KEY, COLUMN_DEFAULT
+           FROM INFORMATION_SCHEMA.COLUMNS
+           WHERE TABLE_NAME = ? AND TABLE_SCHEMA = DATABASE()
+           ORDER BY ORDINAL_POSITION`,
+          [tableName],
+        );
 
-      for (const table of allTables) {
-        const tableName = table?.table_name;
-        if (tableName) {
-          const columnsInfo = await this.connection.query(`
-            SELECT column_name, data_type, is_nullable, column_key, column_default
-            FROM information_schema.columns
-            WHERE table_schema = DATABASE() AND table_name = ?
-          `, [tableName]);
-
-          serverSchema[tableName] = columnsInfo.map(col => ({
-            column_name: col?.column_name,
-            data_type: col?.data_type,
-            is_nullable: col?.is_nullable,
-            column_key: col?.column_key,
-            column_default: col?.column_default,
-          })).filter(colInfo => colInfo.column_name !== undefined && colInfo.data_type !== undefined);
-        }
+        serverSchema[tableName] = columnsInfo.map(col => ({
+          column_name: col?.COLUMN_NAME,
+          data_type: col?.DATA_TYPE,
+          is_nullable: col?.IS_NULLABLE,
+          column_key: col?.COLUMN_KEY,
+          column_default: col?.COLUMN_DEFAULT,
+        })).filter(colInfo => colInfo.column_name !== undefined && colInfo.data_type !== undefined);
       }
 
       return {
         serverSchema: serverSchema,
-        lastSQLOperationId: 'fullSchema_' + Date.now(),
+        lastSQLOperationId: 'schemaInfo_' + Date.now(),
         migrations: [],
       };
     } catch (error) {
