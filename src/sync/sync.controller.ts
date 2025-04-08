@@ -1,5 +1,4 @@
 import { Controller, Post, Body, Inject } from '@nestjs/common';
-import { SyncService } from './sync.service';
 import { InjectConnection } from '@nestjs/typeorm';
 import { Connection } from 'typeorm';
 
@@ -7,10 +6,7 @@ import { Connection } from 'typeorm';
 export class SyncController {
   private readonly requiredTables = ['adjectives', 'nouns'];
 
-  constructor(
-    private readonly syncService: SyncService,
-    @InjectConnection() private readonly connection: Connection,
-  ) {}
+  constructor(@InjectConnection() private readonly connection: Connection) {}
 
   @Post()
   async sync(@Body() syncData: { lastSQLOperationId: string; schema: Record<string, any> }) {
@@ -19,8 +15,8 @@ export class SyncController {
     const missingTables = this.requiredTables.filter(table => !clientTables.includes(table));
     const migrations: string[] = [];
 
-    if (missingTables.length > 0) {
-      for (const tableName of missingTables) {
+    if (missingTables.length > 0 || Object.keys(syncData.schema).length === 0) {
+      for (const tableName of this.requiredTables) {
         try {
           const columnsInfo = await this.connection.query(`
             SELECT column_name, data_type, is_nullable, column_key, column_default
@@ -35,7 +31,7 @@ export class SyncController {
                 columnDef += ` ${col.data_type.toUpperCase()}`;
               } else {
                 console.warn(`Data type missing for column "${col?.column_name}" in table "${tableName}".`);
-                return null; // Skip this column if data type is missing
+                return null;
               }
               if (col.is_nullable === 'NO') {
                 columnDef += ' NOT NULL';
@@ -47,7 +43,7 @@ export class SyncController {
                 columnDef += ` DEFAULT '${col.column_default}'`;
               }
               return columnDef;
-            }).filter(def => def !== null).join(', '); // Filter out null column definitions
+            }).filter(def => def !== null).join(', ');
 
             if (columnsDefinition) {
               migrations.push(`CREATE TABLE IF NOT EXISTS \`${tableName}\` (${columnsDefinition});`);
@@ -63,14 +59,14 @@ export class SyncController {
             console.warn(`Required table "${tableName}" not found on the server.`);
           }
         } catch (error) {
-          console.error(`Error fetching server schema for table "${tableName}":`, error);
+          console.error(`Error fetching server schema and data for table "${tableName}":`, error);
         }
       }
     }
 
     return {
       migrations: migrations,
-      lastSQLOperationId: 'schemaSync_' + Date.now(), // Example ID after schema sync
+      lastSQLOperationId: 'fullSync_' + Date.now(),
     };
   }
 }
