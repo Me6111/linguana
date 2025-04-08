@@ -12,6 +12,7 @@ export class SyncController {
   async sync(@Body() syncData: { lastSQLOperationId: string; schema: Record<string, any> }) {
     console.log('Received sync request:', syncData);
     const serverSchema: Record<string, Record<string, string>> = {};
+    const lastId = syncData.lastSQLOperationId;
 
     try {
       for (const tableName of this.requiredTables) {
@@ -30,13 +31,13 @@ export class SyncController {
 
       return {
         serverSchema: serverSchema,
-        lastSQLOperationId: 'schemaDict_' + Date.now(),
+        lastSQLOperationId: lastId,
       };
     } catch (error) {
       console.error('Error during sync:', error);
       return {
         serverSchema: {},
-        lastSQLOperationId: 'errorDict_' + Date.now(),
+        lastSQLOperationId: lastId,
         error: error.message,
       };
     }
