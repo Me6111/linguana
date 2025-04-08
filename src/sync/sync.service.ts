@@ -1,42 +1,44 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, MoreThan } from 'typeorm';
-import { Migrations } from '../entities/migrations.entity';
+import { InjectConnection } from '@nestjs/typeorm';
+import { Connection } from 'typeorm';
 
 @Injectable()
 export class SyncService {
   private readonly logger = new Logger(SyncService.name);
 
-  constructor(
-    @InjectRepository(Migrations)
-    private migrationsRepository: Repository<Migrations>,
-  ) {}
+  constructor(@InjectConnection() private readonly connection: Connection) {}
 
-  async getUpdates(lastMigrationId: number) {
+  async getTableSchema(tableName: string): Promise<any[]> {
     try {
-      this.logger.log(`Sync request received with lastMigrationId: ${lastMigrationId}`);
-
-      const migrationUpdates = await this.migrationsRepository.find({
-        where: {
-          id: lastMigrationId ? MoreThan(lastMigrationId) : MoreThan(0),
-        },
-        order: { id: 'ASC' },
-      });
-
-      this.logger.log(
-        `Sync: Found ${migrationUpdates.length} migration updates.`,
+      const columns: any[] = await this.connection.query(
+        `SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_KEY, COLUMN_DEFAULT
+         FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_NAME = ? AND TABLE_SCHEMA = ?
+         ORDER BY ORDINAL_POSITION`,
+        [tableName, this.connection.driver.database],
       );
-
-      return migrationUpdates.map(migration => ({
-        id: migration.id,
-        sql: migration.sql, // Include the sql column in the response
-      }));
+      return columns;
     } catch (error) {
-      this.logger.error(`Sync error: ${error.message}`, error.stack);
-
-      return {
-        error: error.message,
-      };
+      this.logger.error(`Error fetching schema for table ${tableName}:`, error);
+      return [];
     }
+  }
+
+  async getFullSchemaForRequiredTables(): Promise<Record<string, any[]>> {
+    const requiredTables = ['adjectives', 'nouns'];
+    const fullSchema: Record<string, any[]> = {};
+    for (const tableName of requiredTables) {
+      const schema = await this.getTableSchema(tableName);
+      if (schema.length > 0) {
+        fullSchema[tableName] = schema.map(col => ({
+          column_name: col.COLUMN_NAME,
+          data_type: col.DATA_TYPE,
+          is_nullable: col.IS_NULLABLE,
+          column_key: col.COLUMN_KEY,
+          column_default: col.COLUMN_DEFAULT,
+        }));
+      }
+    }
+    return fullSchema;
   }
 }
