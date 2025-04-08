@@ -11,7 +11,7 @@ export class SyncController {
   @Post()
   async sync(@Body() syncData: { lastSQLOperationId: string; schema: Record<string, any> }) {
     console.log('Received sync request:', syncData);
-    const serverSchema: Record<string, Record<string, string>> = {};
+    const TablesToCreate: Record<string, Record<string, string>> = {};
     const lastId = syncData.lastSQLOperationId;
 
     try {
@@ -23,14 +23,14 @@ export class SyncController {
           [tableName],
         );
 
-        serverSchema[tableName] = {};
+        TablesToCreate[tableName] = {};
         columnsInfo.forEach(col => {
-          serverSchema[tableName][col.COLUMN_NAME] = col.DATA_TYPE;
+          TablesToCreate[tableName][col.COLUMN_NAME] = col.DATA_TYPE;
         });
       }
 
       return {
-        serverSchema: serverSchema,
+        serverSchema: TablesToCreate,
         lastSQLOperationId: lastId,
       };
     } catch (error) {
