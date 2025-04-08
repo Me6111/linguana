@@ -30,7 +30,13 @@ export class SyncController {
 
           if (columnsInfo.length > 0) {
             const columnsDefinition = columnsInfo.map(col => {
-              let columnDef = `\`${col.column_name}\` ${col.data_type.toUpperCase()}`;
+              let columnDef = `\`${col.column_name}\``;
+              if (col && col.data_type) {
+                columnDef += ` ${col.data_type.toUpperCase()}`;
+              } else {
+                console.warn(`Data type missing for column "${col?.column_name}" in table "${tableName}".`);
+                return null; // Skip this column if data type is missing
+              }
               if (col.is_nullable === 'NO') {
                 columnDef += ' NOT NULL';
               }
@@ -41,15 +47,17 @@ export class SyncController {
                 columnDef += ` DEFAULT '${col.column_default}'`;
               }
               return columnDef;
-            }).join(', ');
+            }).filter(def => def !== null).join(', '); // Filter out null column definitions
 
-            migrations.push(`CREATE TABLE IF NOT EXISTS \`${tableName}\` (${columnsDefinition});`);
+            if (columnsDefinition) {
+              migrations.push(`CREATE TABLE IF NOT EXISTS \`${tableName}\` (${columnsDefinition});`);
 
-            const tableData = await this.connection.query(`SELECT * FROM \`${tableName}\``);
-            for (const row of tableData) {
-              const keys = Object.keys(row).map(key => `\`${key}\``).join(', ');
-              const values = Object.values(row).map(value => typeof value === 'string' ? `'${value.replace(/'/g, "''")}'` : value).join(', ');
-              migrations.push(`INSERT INTO \`${tableName}\` (${keys}) VALUES (${values});`);
+              const tableData = await this.connection.query(`SELECT * FROM \`${tableName}\``);
+              for (const row of tableData) {
+                const keys = Object.keys(row).map(key => `\`${key}\``).join(', ');
+                const values = Object.values(row).map(value => typeof value === 'string' ? `'${value.replace(/'/g, "''")}'` : value).join(', ');
+                migrations.push(`INSERT INTO \`${tableName}\` (${keys}) VALUES (${values});`);
+              }
             }
           } else {
             console.warn(`Required table "${tableName}" not found on the server.`);
