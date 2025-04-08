@@ -30,13 +30,13 @@ export class SyncController {
       }
 
       return {
-        serverSchema: TablesToCreate,
+        TablesToCreate: TablesToCreate,
         lastSQLOperationId: lastId,
       };
     } catch (error) {
       console.error('Error during sync:', error);
       return {
-        serverSchema: {},
+        TablesToCreate: {},
         lastSQLOperationId: lastId,
         error: error.message,
       };
