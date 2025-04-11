@@ -11,7 +11,8 @@ export class SyncController {
   @Post()
   async sync(@Body() syncData: { lastSQLOperationId: string; schema: Record<string, any> }) {
     console.log('Received sync request:', syncData);
-    const TablesToCreate: Record<string, { name: string; type: string }[]> = {};
+    const TablesToCreate: Record<string, { name: string; type: string; notnull?: boolean; pk?: boolean; dflt_value?: any }[]> = {};
+    const TableData: Record<string, any[]> = {};
     const lastId = syncData.lastSQLOperationId;
 
     try {
@@ -30,16 +31,22 @@ export class SyncController {
           pk: col.COLUMN_KEY === 'PRI',
           dflt_value: col.COLUMN_DEFAULT,
         }));
+
+        // Fetch all rows for the current table
+        const tableRows = await this.connection.query(`SELECT * FROM ${tableName}`);
+        TableData[tableName] = tableRows;
       }
 
       return {
         TablesToCreate: TablesToCreate,
+        TableData: TableData,
         lastSQLOperationId: lastId,
       };
     } catch (error) {
       console.error('Error during sync:', error);
       return {
         TablesToCreate: {},
+        TableData: {},
         lastSQLOperationId: lastId,
         error: error.message,
       };
